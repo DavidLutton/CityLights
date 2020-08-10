@@ -1,4 +1,4 @@
-from lights import Communication, DyNet1, mockserial
+from lights import DyNet1
 
 tests = [
     '1c0a64000002ff75',

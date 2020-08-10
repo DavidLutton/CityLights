@@ -7,24 +7,29 @@ logging.getLogger(__name__).addHandler(logging.NullHandler())
 
 
 class Communication():
+    """Contains a queue and send methods to send data."""
 
     def __init__(self, ser=None):
-        self.io = Queue()
+        """Create a queue and an interface to send data."""
+        self.queue = Queue()
         self.ser = ser
 
     def send(self, command):
+        """Render and send command via interface."""
         if self.ser is not None:
             hexdata = command.render()
             logging.debug(f'Sent {command} as {hexdata}')
             self.ser.write(bytes.fromhex(hexdata))
 
     def enqueue(self, command):
-        self.io.put(command)
+        """Add command to queue."""
+        self.queue.put(command)
         logging.debug(f' Add {command} as {command.render()} to queue')
 
     def send_queue(self):
-        while not self.io.empty():
-            commandToSend = self.io.get()
+        """Send in FIFO order the contents of queue."""
+        while not self.queue.empty():
+            commandToSend = self.queue.get()
             self.send(commandToSend)
 
 
@@ -79,10 +84,13 @@ https://en.wikipedia.org/wiki/Dynalite 2020/07/14
 
 
 class DyNet1(namedtuple('DyNet1', DynaliteBytes)):
+    """Contain a DyNet1 message."""
+
     # A 1C message consists of:
     # [1C] [Area] [Data 1] [OpCode] [Data 2] [Data 3] [Join] [Checksum]
 
     def render(self):
+        """Render message to hex with checksum."""
         hexstring = '1c' + \
             f'{self.Area:02x}' + \
             f'{self.Data1:02x}' + \
@@ -95,26 +103,18 @@ class DyNet1(namedtuple('DyNet1', DynaliteBytes)):
 
     @staticmethod
     def checksum(hexstring):
-        # print(hexstring)
+        """Compute checksum."""
         data = bytes.fromhex(hexstring)
 
         checksum = abs((sum(data) & 0xFF) - 256)
 
-        # '%2X' % (-(sum(ord(c) for c in data) % 256) & 0xFF)
-        # (checksum , checksum // 256, checksum % 256)
-
         return f'{checksum:02x}'
-
-    '''
-    def checksum(hexstring):  # Alternative
-        data = bytes.fromhex(hexstring)
-        return hex(((sum(int(data.hex()[i:i+2],16) for i in range(0, len(data.hex()), 2))%0x100)^0xFF)+1)[2:]
-    '''
 
 
 class MockSerial():
-    """Mock as a serial interface, loggs messages sent to it."""
+    """Mock as a serial interface, logs messages sent to it."""
 
     @staticmethod
     def write(data):
+        """Recieve data, log as hex."""
         logging.warn(f'Mock Serial Sent: {data.hex()}')
