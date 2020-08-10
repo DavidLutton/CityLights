@@ -1,0 +1,10 @@
+pyserial
+
+PySimpleGUI
+
+
+pycodestyle
+pydocstyle
+pylint
+
+# ipykernel

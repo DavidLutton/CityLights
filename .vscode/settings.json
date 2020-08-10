@@ -1,0 +1,7 @@
+{
+    "python.linting.pylintEnabled": true,
+    "python.linting.pycodestyleEnabled": true,
+    "python.linting.pydocstyleEnabled": true,
+    "python.linting.enabled": true,
+    "python.pythonPath": "c:\\Users\\david\\Desktop\\Github\\CityLights\\.venv\\Scripts\\python.exe"
+}
