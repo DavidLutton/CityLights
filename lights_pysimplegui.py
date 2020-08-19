@@ -33,7 +33,7 @@ tab_common_layout = [
     [
         sg.Button('Wall On', size=grids),
         sg.Button('Wall Off', size=grids),
-        sg.Button('Set a 3', size=grids),
+        sg.Button('Full Brightness', size=grids),
     ],
     [
         sg.Button('Set b 1', size=grids),
@@ -46,21 +46,20 @@ tab_common_layout = [
         sg.Button('Set c 3', size=grids),
     ],
 ]
+gridsfourbytwo = (9, 6)
+
 tab_stage_layout = [
     [
-        sg.Button('Set stage a 1', size=grids),
-        sg.Button('Set stage a 2', size=grids),
-        sg.Button('Set stage a 3', size=grids),
+        sg.Button('Setup A', size=gridsfourbytwo),
+        sg.Button('Setup B', size=gridsfourbytwo),
+        sg.Button('Setup C', size=gridsfourbytwo),
+        sg.Button('Setup D', size=gridsfourbytwo),
     ],
     [
-        sg.Button('Set stage b 1', size=grids),
-        sg.Button('Set stage b 2', size=grids),
-        sg.Button('Set stage b 3', size=grids),
-    ],
-    [
-        sg.Button('Set stage c 1', size=grids),
-        sg.Button('Set stage c 2', size=grids),
-        sg.Button('Set stage c 3', size=grids),
+        sg.Button('Setup E', size=gridsfourbytwo),
+        sg.Button('Setup F', size=gridsfourbytwo),
+        sg.Button('Setup G', size=gridsfourbytwo),
+        sg.Button('All Off', size=gridsfourbytwo, button_color='black on red'),
     ],
 ]
 
@@ -72,7 +71,7 @@ col_manual_labels = [
     [sg.Text('Data 3', pad=((0, 0), (0, 20)))],
 ]
 col_manual_sliders = [
-    [sg.Slider((0, 8), 0, 1, orientation="h", size=(40, 15), key="-Manual Area-", enable_events=True)],
+    [sg.Slider((0, 16), 0, 1, orientation="h", size=(40, 15), key="-Manual Area-", enable_events=True)],
     [sg.Slider((0, 255), 128, 1, orientation="h", size=(40, 15), key="-Manual Data 1-", enable_events=True)],
     [sg.Slider((0, 255), 128, 1, orientation="h", size=(40, 15), key="-Manual OpCode-", enable_events=True)],
     [sg.Slider((0, 255), 128, 1, orientation="h", size=(40, 15), key="-Manual Data 2-", enable_events=True)],
@@ -83,18 +82,17 @@ tab_manual_control_layout = [
 
     [sg.Text('', size=(58, 1), key='render repr', font=('Helvetica', 14, 'bold'))],
     [sg.Text('', size=(16, 1), key='render hex', font=('Helvetica', 14, 'bold'))],
-    [sg.Button('Send')],
+    [sg.Button('Send'), sg.Button('Send All')],
     ]
-
 
 tab_exit_layout = [[sg.Text("Exit from PySimpleGUI")], [sg.Button("Exit", key='--Exit--')]]
 
 layout = [[
     sg.TabGroup([[
-        sg.Tab(' '*4 + 'Common' + ' '*4, tab_common_layout),
-        sg.Tab(' '*4 + 'Stage' + ' '*4, tab_stage_layout),
+        sg.Tab(' '*4 + 'Presets' + ' '*4, tab_stage_layout),
+        sg.Tab(' '*4 + 'Common' + ' '*4, tab_common_layout, visible=True),
         sg.Tab(' '*4 + 'Manual' + ' '*4, tab_manual_control_layout, visible=True),
-        sg.Tab(' '*4 + 'Exit' + ' '*4, tab_exit_layout),
+        sg.Tab(' '*4 + 'Exit' + ' '*4, tab_exit_layout, visible=True),
     ]], border_width=0)
 ]]
 
@@ -106,7 +104,7 @@ window = sg.Window(
     layout,
     no_titlebar=False,
     location=(0, 0),
-    size=(650, 480),
+    size=(800, 480),
     keep_on_top=False,
     # auto_size_buttons=True,
     # auto_size_text=True,
@@ -137,6 +135,10 @@ while True:
     if event == 'Send':
         lights.send(dynet)
 
+    if event == 'Send All':
+        for area in [1, 2, 3, 4, 5, 6, 7, 8]:
+            lights.send(DyNet1(area, data1, opcode, data2, data3))
+
     if event == 'Wall On':
         for area in [1, 2, 3, 4, 5, 6, 7, 8]:
             lights.enqueue(DyNet1(area, 255, 0, 0, 1))
@@ -146,6 +148,36 @@ while True:
         for area in [1, 2, 3, 4, 5, 6, 7, 8]:
             lights.enqueue(DyNet1(area, 255, 3, 0, 0))
         lights.send_queue()
+
+    if event == 'Full Brightness':
+        for area in [1, 2, 3, 4, 5, 6, 7, 8]:
+            lights.enqueue(DyNet1(area, 255, 0, 0, 2))
+        lights.send_queue()
+
+    rate = 64
+    if event == 'Setup A':
+        lights.send(DyNet1(0, rate, 0, 0, 0))
+
+    if event == 'Setup B':
+        lights.send(DyNet1(0, rate, 1, 0, 0))
+
+    if event == 'Setup C':
+        lights.send(DyNet1(0, rate, 2, 0, 0))
+
+    if event == 'Setup D':
+        lights.send(DyNet1(0, rate, 10, 0, 0))
+
+    if event == 'Setup E':
+        lights.send(DyNet1(0, rate, 11, 0, 0))
+
+    if event == 'Setup F':
+        lights.send(DyNet1(0, rate, 12, 0, 0))
+
+    if event == 'Setup G':
+        lights.send(DyNet1(0, rate, 13, 0, 0))
+
+    if event == 'All Off':
+        lights.send(DyNet1(0, 255, 13, 0, 0))
 
     print(f'Event: {event}')
 
