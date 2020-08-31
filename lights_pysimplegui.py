@@ -1,4 +1,5 @@
 
+import os
 from pprint import pprint
 from time import sleep
 
@@ -7,6 +8,14 @@ import serial
 from serial.tools.list_ports import comports
 
 from lights import Communication, DyNet1, MockSerial
+
+if 'raspberrypi' in os.uname():
+    from rpi_backlight import Backlight
+
+    backlight = Backlight()
+    print(backlight.brightness)
+    with backlight.fade(duration=2):
+        backlight.brightness = 26
 
 for port in comports():
     # print(dir(port))
@@ -46,8 +55,7 @@ tab_common_layout = [
         sg.Button('Set c 3', size=grids),
     ],
 ]
-gridsfourbytwo = (9, 6)
-
+gridsfourbytwo = (12, 7)
 tab_stage_layout = [
     [
         sg.Button('Setup A', size=gridsfourbytwo),
@@ -63,6 +71,30 @@ tab_stage_layout = [
     ],
 ]
 
+gridseightbytwo = (4, 4)
+tab_adjust_layout = [
+    [
+        sg.Button('↓ 1', size=gridseightbytwo),
+        sg.Button('↓ 2', size=gridseightbytwo),
+        sg.Button('↓ 3', size=gridseightbytwo),
+        sg.Button('↓ 4', size=gridseightbytwo),
+        sg.Button('↓ 5', size=gridseightbytwo),
+        sg.Button('↓ 6', size=gridseightbytwo),
+        sg.Button('↓ 7', size=gridseightbytwo),
+        sg.Button('↓ 8', size=gridseightbytwo),
+    ],
+    [
+        sg.Button('↑ 1', size=gridseightbytwo),
+        sg.Button('↑ 2', size=gridseightbytwo),
+        sg.Button('↑ 3', size=gridseightbytwo),
+        sg.Button('↑ 4', size=gridseightbytwo),
+        sg.Button('↑ 5', size=gridseightbytwo),
+        sg.Button('↑ 6', size=gridseightbytwo),
+        sg.Button('↑ 7', size=gridseightbytwo),
+        sg.Button('↑ 8', size=gridseightbytwo),
+    ],
+]
+
 col_manual_labels = [
     [sg.Text('Area', pad=((0, 0), (25, 20)))],
     [sg.Text('Data 1', pad=((0, 0), (0, 20)))],
@@ -70,6 +102,7 @@ col_manual_labels = [
     [sg.Text('Data 2', pad=((0, 0), (0, 20)))],
     [sg.Text('Data 3', pad=((0, 0), (0, 20)))],
 ]
+
 col_manual_sliders = [
     [sg.Slider((0, 16), 0, 1, orientation="h", size=(40, 15), key="-Manual Area-", enable_events=True)],
     [sg.Slider((0, 255), 128, 1, orientation="h", size=(40, 15), key="-Manual Data 1-", enable_events=True)],
@@ -77,6 +110,7 @@ col_manual_sliders = [
     [sg.Slider((0, 255), 128, 1, orientation="h", size=(40, 15), key="-Manual Data 2-", enable_events=True)],
     [sg.Slider((0, 255), 128, 1, orientation="h", size=(40, 15), key="-Manual Data 3-", enable_events=True)],
 ]
+
 tab_manual_control_layout = [
     [sg.Column(col_manual_labels), sg.Column(col_manual_sliders)],
 
@@ -85,14 +119,22 @@ tab_manual_control_layout = [
     [sg.Button('Send'), sg.Button('Send All')],
     ]
 
-tab_exit_layout = [[sg.Text("Exit from PySimpleGUI")], [sg.Button("Exit", key='--Exit--')]]
+tab_backlight_control_layout = [
+    [sg.Text('Backlight')],
+    [sg.Slider((6, 100), 26, 2, orientation="h", size=(40, 15), key="Backlight", enable_events=True)],
+]
 
+tab_exit_layout = [[sg.Text("Exit from City Lights UI")], [sg.Button("Exit", key='--Exit--')]]
+
+padding = ' ' * 2
 layout = [[
     sg.TabGroup([[
-        sg.Tab(' '*4 + 'Presets' + ' '*4, tab_stage_layout),
-        sg.Tab(' '*4 + 'Common' + ' '*4, tab_common_layout, visible=True),
-        sg.Tab(' '*4 + 'Manual' + ' '*4, tab_manual_control_layout, visible=True),
-        sg.Tab(' '*4 + 'Exit' + ' '*4, tab_exit_layout, visible=True),
+        sg.Tab(padding + 'Presets' + padding, tab_stage_layout),
+        sg.Tab(padding + 'Adjust' + padding, tab_adjust_layout, visible=True),
+        sg.Tab(padding + 'Common' + padding, tab_common_layout, visible=False),
+        sg.Tab(padding + 'Manual' + padding, tab_manual_control_layout, visible=False),
+        sg.Tab(padding + 'Backlight' + padding, tab_backlight_control_layout, visible=True),
+        sg.Tab(padding + 'Exit' + padding, tab_exit_layout, visible=True),
     ]], border_width=0)
 ]]
 
@@ -102,16 +144,16 @@ layout = [[
 window = sg.Window(
     'Lights',  # Title
     layout,
-    no_titlebar=False,
+    no_titlebar=True,
     location=(0, 0),
     size=(800, 480),
     keep_on_top=False,
     # auto_size_buttons=True,
     # auto_size_text=True,
     font=('Helvetica', 18, 'bold'),
-    default_element_size=(30, 1)
+    # default_element_size=(30, 1)
 )
-
+lastsetup = None
 # Create an event loop
 while True:
     event, values = window.read(timeout=10000)  # set time out
@@ -179,6 +221,23 @@ while True:
     if event == 'All Off':
         lights.send(DyNet1(0, 255, 13, 0, 0))
 
-    print(f'Event: {event}')
+    if event.startswith('↓') or event.startswith('↑'):
+        # Adjust an area 1 count ↑ or ↓
+        part = event.split(' ')
+        heading, area = part[0], int(part[1])
 
+        if heading == '↑':
+            lights.send(DyNet1(area, 20, 6, 0, 0))
+
+        if heading == '↓':
+            lights.send(DyNet1(area, 20, 5, 0, 0))
+
+    if event == 'Backlight':
+        if 'raspberrypi' in os.uname():
+            backlight.brightness = int(values['Backlight'])
+
+    print(f'Event: {event}')
+    if event.startswith('Setup'):
+        lastsetup = event.split(' ')[1]
+    print(f'Last Setup: {lastsetup}')
 window.close()
