@@ -1,0 +1,7 @@
+[Desktop Entry]
+Type=Application
+Name=City Lights UI
+Comment=Control the lights
+NoDisplay=false
+Exec=/home/pi/CityLights/.venv/bin/python /home/pi/CityLights/lights_pysimplegui.py
+NotShowIn=GNOME;KDE;XFCE;

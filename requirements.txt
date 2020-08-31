@@ -8,3 +8,4 @@ pydocstyle
 pylint
 
 # ipykernel
+rpi-backlight

@@ -34,4 +34,4 @@ try:
 except subprocess.CalledProcessError as e:
     print(e, run)
 
-input('Done, Press enter to close.')
+# input('Done, Press enter to close.')

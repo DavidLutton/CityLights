@@ -19,4 +19,4 @@ if not venvtarget.is_dir():
 else:
     print(f'venv exists in: {venvtarget}')
 
-input('Done, Press enter to close.')
+# input('Done, Press enter to close.')
