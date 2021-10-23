@@ -9,14 +9,17 @@ from serial.tools.list_ports import comports
 
 from lights import Communication, DyNet1, MockSerial
 
+rpi = False
+
 if 'raspberrypi' in os.uname():
+    rpi = True
     from rpi_backlight import Backlight
 
     backlight = Backlight()
     print(backlight.brightness)
     with backlight.fade(duration=2):
         backlight.brightness = 26
-
+    
 for port in comports():
     # print(dir(port))
     # print(port.device)
@@ -74,16 +77,6 @@ tab_stage_layout = [
 gridseightbytwo = (4, 4)
 tab_adjust_layout = [
     [
-        sg.Button('↓ 1', size=gridseightbytwo),
-        sg.Button('↓ 2', size=gridseightbytwo),
-        sg.Button('↓ 3', size=gridseightbytwo),
-        sg.Button('↓ 4', size=gridseightbytwo),
-        sg.Button('↓ 5', size=gridseightbytwo),
-        sg.Button('↓ 6', size=gridseightbytwo),
-        sg.Button('↓ 7', size=gridseightbytwo),
-        sg.Button('↓ 8', size=gridseightbytwo),
-    ],
-    [
         sg.Button('↑ 1', size=gridseightbytwo),
         sg.Button('↑ 2', size=gridseightbytwo),
         sg.Button('↑ 3', size=gridseightbytwo),
@@ -92,6 +85,16 @@ tab_adjust_layout = [
         sg.Button('↑ 6', size=gridseightbytwo),
         sg.Button('↑ 7', size=gridseightbytwo),
         sg.Button('↑ 8', size=gridseightbytwo),
+    ],
+    [
+        sg.Button('↓ 1', size=gridseightbytwo),
+        sg.Button('↓ 2', size=gridseightbytwo),
+        sg.Button('↓ 3', size=gridseightbytwo),
+        sg.Button('↓ 4', size=gridseightbytwo),
+        sg.Button('↓ 5', size=gridseightbytwo),
+        sg.Button('↓ 6', size=gridseightbytwo),
+        sg.Button('↓ 7', size=gridseightbytwo),
+        sg.Button('↓ 8', size=gridseightbytwo),
     ],
 ]
 
@@ -132,7 +135,7 @@ layout = [[
         sg.Tab(padding + 'Presets' + padding, tab_stage_layout),
         sg.Tab(padding + 'Adjust' + padding, tab_adjust_layout, visible=True),
         sg.Tab(padding + 'Common' + padding, tab_common_layout, visible=False),
-        sg.Tab(padding + 'Manual' + padding, tab_manual_control_layout, visible=False),
+        sg.Tab(padding + 'Manual' + padding, tab_manual_control_layout, visible=True),
         sg.Tab(padding + 'Backlight' + padding, tab_backlight_control_layout, visible=True),
         sg.Tab(padding + 'Exit' + padding, tab_exit_layout, visible=True),
     ]], border_width=0)
@@ -144,13 +147,13 @@ layout = [[
 window = sg.Window(
     'Lights',  # Title
     layout,
-    no_titlebar=True,
-    location=(0, 0),
+    no_titlebar = True if rpi else False,
+    location = (0, 0) if rpi else (50, 50),
     size=(800, 480),
     keep_on_top=False,
     # auto_size_buttons=True,
     # auto_size_text=True,
-    font=('Helvetica', 18, 'bold'),
+    font=('Helvetica', 18 if rpi else 14, 'bold'),
     # default_element_size=(30, 1)
 )
 lastsetup = None
